@@ -1,16 +1,16 @@
 Map<String, String> env = System.getenv()
-createBranch(env['_DB_ACCOUNT'])
+createBranch(env['_DB_ACCOUNT'], env['TEMP'])
 
-static void createBranch(String accountName) {
-    String[] text = "git branch -r".execute().text.split("\n")
-    if (text.size() > 1) {
-        List<String> branches = new ArrayList<>()
-        for (int i = 1; i < text.size(); i++) {
-            branches.add(text[i].replaceAll(" ", "").replace("origin/", ""))
-        }
-        if (!branches.contains(accountName)) {
-            ("git checkout -b " + accountName).execute()
-            ("git push origin " + accountName).execute()
-        }
+static void createBranch(String accountName, String directory) {
+    print execute("git clone https://bitbucket.org/versonix/sw-jenkins-deploy", directory).text
+    directory += "/sw-jenkins-deploy"
+    String text = execute("git ls-remote --quiet --heads origin " + accountName, directory).text
+    if (text.isEmpty()) {
+        execute("git checkout -b " + accountName, directory)
+        execute("git push origin " + accountName, directory)
     }
+}
+
+private static Process execute(String command, String directory) {
+    return command.execute(Collections.emptyList(), new File(directory))
 }
